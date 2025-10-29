@@ -10,7 +10,7 @@ from pycoingecko import CoinGeckoAPI
 class CoingeckoSource(DataSource):
 
     def __init__(self):
-        super().__init__()
+        super().__init__(name="coingecko")
         self.cg_api = CoinGeckoAPI(demo_api_key=os.getenv('KEY_COINDGECKO_API'))
 
     def fetch_current_prices(self, symbols):
