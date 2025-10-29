@@ -14,16 +14,42 @@ class CoingeckoSource(DataSource):
         self.cg_api = CoinGeckoAPI(demo_api_key=os.getenv('KEY_COINDGECKO_API'))
 
     def fetch_current_prices(self, symbols):
-        results = self.cg_api.get_price(ids=symbols, vs_currencies=os.getenv('DATASOURCE_CURRENCY'))
-        return results
+        results = self.cg_api.get_price(ids=symbols,
+                                        vs_currencies=os.getenv('DATASOURCE_CURRENCY'),
+                                        include_market_cap=True,
+                                        include_24hr_vol=True
+                                    )
+
+        data = []
+
+        for coin, values in results.items():
+            data.append({
+                "symbol": coin,
+                "date": pd.Timestamp.now().date(),
+                "price": values.get(os.getenv('DATASOURCE_CURRENCY')),
+                "market_cap": values.get(f"{os.getenv('DATASOURCE_CURRENCY')}_market_cap"),
+                "volume": values.get(f"{os.getenv('DATASOURCE_CURRENCY')}_24h_vol"),
+            })
+
+        return pd.DataFrame(data)
 
     def fetch_historical_prices(self, symbol, days=7):
-        ohlc = self.cg_api.get_coin_ohlc_by_id(id=symbol, vs_currency=os.getenv('DATASOURCE_CURRENCY'), days=str(days))
+        api_result = self.cg_api.get_coin_market_chart_by_id(id=symbol, vs_currency=os.getenv('DATASOURCE_CURRENCY'), days=days, interval='daily')
 
-        df = pd.DataFrame(ohlc)
+        df_prices = pd.DataFrame(api_result['prices'], columns=["timestamp", "price"])
+        df_market_caps = pd.DataFrame(api_result['market_caps'], columns=["timestamp", "market_cap"])
+        df_volumes = pd.DataFrame(api_result['total_volumes'], columns=["timestamp", "volume"])
 
-        df.columns = ["date", "open", "high", "low", "close"]
-        df["date"] = pd.to_datetime(df["date"], unit = "ms")
-        df.set_index('date', inplace = True)
+        df = df_prices.merge(df_market_caps, on="timestamp")
+        df = df.merge(df_volumes, on="timestamp")
+
+        df["date"] = pd.to_datetime(df["timestamp"], unit="ms").dt.date
+
+        df["symbol"] = symbol
+
+        df = df[["symbol", "date", "price", "market_cap", "volume"]]
 
         return df
+
+    def fetch_market_coins(self):
+        return self.cg_api.get_coins_markets()
