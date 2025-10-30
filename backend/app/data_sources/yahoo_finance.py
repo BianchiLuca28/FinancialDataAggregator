@@ -1,4 +1,4 @@
-from base import DataSource
+from .base import DataSource
 
 class YahooSource(DataSource):
 

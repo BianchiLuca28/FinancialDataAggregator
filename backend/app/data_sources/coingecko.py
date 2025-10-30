@@ -1,4 +1,4 @@
-from base import DataSource
+from .base import DataSource
 from dotenv import load_dotenv
 import os
 import pandas as pd
@@ -29,12 +29,13 @@ class CoingeckoSource(DataSource):
                 "price": values.get(os.getenv('DATASOURCE_CURRENCY')),
                 "market_cap": values.get(f"{os.getenv('DATASOURCE_CURRENCY')}_market_cap"),
                 "volume": values.get(f"{os.getenv('DATASOURCE_CURRENCY')}_24h_vol"),
+                "source": self.name
             })
 
         return pd.DataFrame(data)
 
     def fetch_historical_prices(self, symbol, days=7):
-        api_result = self.cg_api.get_coin_market_chart_by_id(id=symbol, vs_currency=os.getenv('DATASOURCE_CURRENCY'), days=days, interval='daily')
+        api_result = self.cg_api.get_coin_market_chart_by_id(id=symbol, vs_currency=os.getenv('DATASOURCE_CURRENCY'), days=days)
 
         df_prices = pd.DataFrame(api_result['prices'], columns=["timestamp", "price"])
         df_market_caps = pd.DataFrame(api_result['market_caps'], columns=["timestamp", "market_cap"])
@@ -43,11 +44,13 @@ class CoingeckoSource(DataSource):
         df = df_prices.merge(df_market_caps, on="timestamp")
         df = df.merge(df_volumes, on="timestamp")
 
-        df["date"] = pd.to_datetime(df["timestamp"], unit="ms").dt.date
+        df["date"] = pd.to_datetime(df["timestamp"], unit="ms")
 
         df["symbol"] = symbol
 
-        df = df[["symbol", "date", "price", "market_cap", "volume"]]
+        df["source"] = self.name
+
+        df = df[["symbol", "date", "price", "market_cap", "volume", "source"]]
 
         return df
 

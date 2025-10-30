@@ -1,5 +1,5 @@
 # Test database connection
-from connection import PostgreDatabase
+from .connection import PostgreDatabase
 
 def test_database_connection():
     db = PostgreDatabase()
