@@ -14,6 +14,15 @@ from datetime import datetime
 Base = declarative_base()
 
 class Asset(Base):
+    """SQLAlchemy model for financial assets.
+
+     Attributes:
+        id (int): Primary key.
+        symbol (str): Asset symbol (e.g., 'BTC').
+        name (str): Asset name (e.g., 'Bitcoin').
+        asset_type (str): Type of asset ('crypto', 'etf', 'stock').
+        source (str): Source of the asset data."""
+
     __tablename__ = "assets"
 
     id = Column(Integer, primary_key=True)
@@ -35,11 +44,22 @@ class Asset(Base):
 
 
 class AssetPrice(Base):
+    """SQLAlchemy model for asset prices.
+
+    Attributes:
+        id (int): Primary key.
+        asset_id (int): Foreign key to Asset.
+        date (DateTime): Date of the price data.
+        price (Decimal): Price of the asset.
+        market_cap (Decimal): Market capitalization.
+        volume (Decimal): Trading volume.
+        source (str): Source of the price data.
+    """
     __tablename__ = "asset_prices"
 
     id = Column(Integer, primary_key=True)
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
-    date = Column(Date, nullable=False)
+    date = Column(DateTime, nullable=False)
     price = Column(Numeric(20, 8), nullable=False)
     market_cap = Column(Numeric(30, 8))
     volume = Column(Numeric(20, 8))

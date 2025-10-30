@@ -1,4 +1,4 @@
-from coingecko import CoingeckoSource
+from .coingecko import CoingeckoSource
 
 cs = CoingeckoSource()
 

@@ -22,8 +22,12 @@ class PostgreDatabase:
         self.Session = sessionmaker(bind=self.engine)
 
     def create_tables(self):
-        from models import Base
+        from .models import Base
         Base.metadata.create_all(self.engine)
+
+    def drop_tables(self):
+        from .models import Base
+        Base.metadata.drop_all(self.engine)
 
     def get_session(self):
         return self.Session()
